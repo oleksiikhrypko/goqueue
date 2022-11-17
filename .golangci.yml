@@ -1,0 +1,174 @@
+run:
+
+  # timeout for analysis, e.g. 30s, 5m, default is 1m
+  deadline: 3m
+
+  skip-dirs: []
+
+  # which files to skip: they will be analyzed, but issues from them
+  # won't be reported.
+  skip-files:
+    - "^.+\\.gen\\.go$"
+
+  # by default isn't set. If set we pass it to "go list -mod={option}". From "go help modules":
+  # If invoked with -mod=readonly, the go command is disallowed from the implicit
+  # automatic updating of go.mod described above. Instead, it fails when any changes
+  # to go.mod are needed. This setting is most useful to check that go.mod does
+  # not need updates, such as in a continuous integration and testing system.
+  # If invoked with -mod=vendor, the go command assumes that the vendor
+  # directory holds the correct copies of dependencies and ignores
+  # the dependency descriptions in go.mod.
+  modules-download-mode: readonly
+
+
+linters:
+  disable-all: true
+  enable:
+    # Default
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+#    - staticcheck
+    - structcheck
+    - typecheck
+    - varcheck
+    # Custom
+    - asciicheck
+    - bodyclose
+    - dupl
+    - durationcheck
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - forcetypeassert
+    - funlen
+    - goconst
+    - gocritic
+    - gocyclo
+    - goerr113
+    - gofmt
+    - gosec
+    - ifshort
+    - lll
+    - misspell
+    - nakedret
+    - nilerr
+    - noctx
+    - nolintlint
+    - paralleltest
+    - prealloc
+    - predeclared
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - testpackage
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - wastedassign
+    #    - wrapcheck
+    - exhaustivestruct
+  # Disabled
+  # - golint            # revive is used instead
+  # - makezero          # not needed
+  # - importas          # not needed
+  # - gomoddirectives   # not needed
+  # - forbidigo         # not used now, may be enabled later
+  # - cyclop            # gocyclo used instead
+  # - unused            # gives tons of false-positives
+  # - gofumpt           # gofmt is good enough already
+  # - stylecheck        # golint is good enough already
+  # - gocognit          # absolutely useless - all services/controllers are reported
+  # - goimports         # gofmt is good enough already
+  # - goheader          # we don't have such requirement
+  # - gci               # no need
+  # - depguard          # no need
+  # - dogsled           # no need
+  # - scopelint         # deprecated
+  # - gochecknoinits    # sometimes they are needed
+  # - gochecknoglobals  # sometimes they are needed
+  # - godox             # we will use bots that will handle that
+  # - whitespace        # style is up to developer
+  # - wsl               # style is up to developer
+  # - goprintffuncname  # no need
+  # - gomodguard        # no need
+  # - godot             # no need
+  # - nlreturn          # style is up to developer
+  # - gomnd             # good in theory, not always good in practice
+  # - nestif            # useless most of the time
+  # - maligned          # deprecated
+  # - interfacer        # deprecated
+
+# all available settings of specific linters
+linters-settings:
+
+  dupl:
+    # tokens count to trigger issue, 150 by default
+    threshold: 300
+
+  funlen:
+    lines: 150
+    statements: 75
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - performance
+      - style
+    disabled-checks:
+      - paramTypeCombine  # style is up to developer
+
+    settings:
+      hugeParam:
+        sizeThreshold: 100
+
+  gocyclo:
+    # minimal code complexity to report, 30 by default (but we recommend 10-20)
+    min-complexity: 30
+
+  lll:
+    line-length: 140
+
+  misspell:
+    locale: US
+    ignore-words:
+      - bellum
+
+  nakedret:
+    # make an issue if func has more lines of code than this setting and it has naked returns; default is 30
+    max-func-lines: 1
+
+  exhaustive:
+    # indicates that switch statements are to be considered exhaustive if a
+    # 'default' case is present, even if all enum members aren't listed in the
+    # switch
+    default-signifies-exhaustive: true
+
+issues:
+
+  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  max-same-issues: 0
+
+  # List of regexps of issue texts to exclude, empty list by default.
+  # But independently from this option we use default exclude patterns,
+  # it can be disabled by `exclude-use-default: false`. To list all
+  # excluded by default patterns execute `golangci-lint run --help`
+  exclude:
+    - "method .+Id.* should be .+ID.*"
+    - "sloppyReassign: re-assignment to" # useless and harmful lint
+    - "do not define dynamic errors, use wrapped static errors instead" # we use such errors for validation
+
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - lll
+        - dupl
+        - gomnd
+        - funlen
+        - goconst
+        - dogsled
+        - exhaustivestruct

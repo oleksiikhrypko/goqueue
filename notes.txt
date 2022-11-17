@@ -1,0 +1,30 @@
+API:
+
+Push(topic, msgID, sequenceKey, payload) error
+
+Get() (Message{id, payload}, error)
+Commit(eventID)
+Rollback(eventID)
+Touch(msgID, visibilityTimeout)
+
+
+              List
+      end              begin
+nil <- m <-> m -> ... <- m -> nil
+
+
+seq1: 1 29 3 4 5
+seq2: 10 11 12
+seq3: 45 192 112
+seq4: 1245 12192 6
+
+topic1: 1 2 10 45 11 3 4 192 5 12 112
+topic1: seq1 seq2 seq3 seq4
+
+in_progress:  seq1 seq2 seq3
+
+group1
+w1 w2 w3 w4
+
+group2
+g2w1 g2w2 g2w3
