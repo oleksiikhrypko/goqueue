@@ -24,10 +24,9 @@ var (
 
 // for tests
 func main() {
-	now := time.Now()
 	log.Printf("start version:%s branch:%s commit:%s buildTime:%s", Version, Branch, Commit, BuildTime)
 
-	db, err := leveldb.OpenFile("tmp/test2", nil)
+	db, err := leveldb.OpenFile("tmp/test8", nil)
 	defer db.Close()
 	if err != nil {
 		log.Println("init db failed", err)
@@ -36,13 +35,11 @@ func main() {
 	wg := &sync.WaitGroup{}
 	ctx := context.Background()
 
-	list, err := klist.New(ctx, "list", listdb.NewDB(ctx, db))
-	if err != nil {
-		log.Println("failed to init klist", err)
-	}
+	list := klist.New(ctx, "list", listdb.NewDB(ctx, db))
 
+	now := time.Now()
 	wg.Add(1)
-	go addItemsToList(wg, list, 1000000)
+	go addItemsToList(wg, list, 200000)
 	// time.Sleep(time.Second)
 	// go readList(wg, list, "r1")
 	// go readList(wg, list, "r1")
@@ -51,10 +48,17 @@ func main() {
 	wg.Wait()
 	log.Println("[write] done", time.Now().Sub(now))
 
-	// wg.Add(1)
-	// go readList(wg, list, "r1")
-	// wg.Wait()
+	now = time.Now()
+	wg.Add(1)
+	go readList(wg, list, "read1")
+	wg.Wait()
 	log.Println("[read] done", time.Now().Sub(now))
+
+	now = time.Now()
+	wg.Add(1)
+	go popList(wg, list, "pop1")
+	wg.Wait()
+	log.Println("[pop] done", time.Now().Sub(now))
 
 	// readAllKeys(db)
 }
@@ -72,10 +76,32 @@ func addItemsToList(wg *sync.WaitGroup, list storage.List, len int) {
 
 func readList(wg *sync.WaitGroup, list storage.List, fpfx string) {
 	var err error
-	item := list.GetFirst()
+	item, err := list.GetFirst()
+	if err != nil {
+		log.Println("failed on GetFirst", err)
+		return
+	}
 	for item != nil {
-		log.Println(fpfx, "--->", string(item))
+		// log.Println(fpfx, "--->", string(item))
 		item, err = list.GetNext(item)
+		if err != nil {
+			log.Println("failed to read next element from list", err)
+			return
+		}
+	}
+	wg.Done()
+}
+
+func popList(wg *sync.WaitGroup, list storage.List, fpfx string) {
+	var err error
+	item, err := list.Pop()
+	if err != nil {
+		log.Println("failed on GetFirst", err)
+		return
+	}
+	for item != nil {
+		// log.Println(fpfx, "--->", string(item))
+		item, err = list.Pop()
 		if err != nil {
 			log.Println("failed to read next element from list", err)
 			return
@@ -103,7 +129,12 @@ func readList2(wg *sync.WaitGroup, list storage.List, fpfx string) {
 
 func readListBack(wg *sync.WaitGroup, list storage.List, fpfx string) {
 	var err error
-	item := list.GetLast()
+	item, err := list.GetLast()
+	if err != nil {
+		log.Println("failed on GetLast", err)
+		return
+	}
+
 	for item != nil {
 		log.Println(fpfx, "<---", string(item))
 		item, err = list.GetPrev(item)

@@ -55,7 +55,3 @@ func (l *KList) hasKey(key []byte) (bool, error) {
 func (l *KList) isItemExists(item []byte) (bool, error) {
 	return l.hasKey(buildItemKey(l.name, item))
 }
-
-func (l *KList) isEmpty() bool {
-	return l.state.Count == 0
-}

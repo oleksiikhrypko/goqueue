@@ -18,8 +18,7 @@ func Test_KList_general(t *testing.T) {
 	db := inmem.NewDB(ctx)
 
 	name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-	list, err := New(ctx, name, db)
-	require.NoError(t, err)
+	list := New(ctx, name, db)
 
 	in := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"}
 
@@ -28,8 +27,12 @@ func Test_KList_general(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	require.Equal(t, "1", string(list.GetFirst()))
-	require.Equal(t, "9", string(list.GetLast()))
+	first, err := list.GetFirst()
+	require.NoError(t, err)
+	require.Equal(t, "1", string(first))
+	last, err := list.GetLast()
+	require.NoError(t, err)
+	require.Equal(t, "9", string(last))
 	v, err := list.GetNext([]byte("9"))
 	require.NoError(t, err)
 	require.Nil(t, v)
@@ -48,15 +51,20 @@ func Test_KList_general(t *testing.T) {
 	b, err = list.IsItemExists([]byte("444"))
 	require.NoError(t, err)
 	require.False(t, b)
-	b = list.IsItemFirst([]byte("1"))
+	b, err = list.IsItemFirst([]byte("1"))
+	require.NoError(t, err)
 	require.True(t, b)
-	b = list.IsItemFirst([]byte("111"))
+	b, err = list.IsItemFirst([]byte("111"))
+	require.NoError(t, err)
 	require.False(t, b)
-	b = list.IsItemLast([]byte("1"))
+	b, err = list.IsItemLast([]byte("1"))
+	require.NoError(t, err)
 	require.False(t, b)
-	b = list.IsItemLast([]byte("999"))
+	b, err = list.IsItemLast([]byte("999"))
+	require.NoError(t, err)
 	require.False(t, b)
-	b = list.IsItemLast([]byte("9"))
+	b, err = list.IsItemLast([]byte("9"))
+	require.NoError(t, err)
 	require.True(t, b)
 }
 
@@ -84,11 +92,11 @@ func TestKList_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var err error
 			db := inmem.NewDB(ctx)
 
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l, err := New(ctx, name, db)
-			require.NoError(t, err)
+			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
 				err = l.Add([]byte(v))
@@ -96,24 +104,30 @@ func TestKList_Add(t *testing.T) {
 			}
 
 			res := make([]string, 0, len(tt.expect))
-			item := l.GetFirst()
+			item, err := l.GetFirst()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetNext(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expect, res)
-			require.Equal(t, len(tt.expect), int(l.GetCount()))
+			count, err := l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expect), int(count))
 
 			res = make([]string, 0, len(tt.expect))
-			item = l.GetLast()
+			item, err = l.GetLast()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetPrev(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expectRev, res)
-			require.Equal(t, len(tt.expectRev), int(l.GetCount()))
+			count, err = l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expectRev), int(count))
 		})
 	}
 }
@@ -134,10 +148,10 @@ func TestKList_Pop(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var err error
 			db := inmem.NewDB(ctx)
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l, err := New(ctx, name, db)
-			require.NoError(t, err)
+			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
 				err = l.Add([]byte(v))
@@ -153,7 +167,9 @@ func TestKList_Pop(t *testing.T) {
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expect, res)
-			require.Equal(t, 0, int(l.GetCount()))
+			count, err := l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, 0, int(count))
 		})
 	}
 }
@@ -251,10 +267,10 @@ func TestKList_Delete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var err error
 			db := inmem.NewDB(ctx)
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l, err := New(ctx, name, db)
-			require.NoError(t, err)
+			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
 				err = l.Add([]byte(v))
@@ -264,24 +280,30 @@ func TestKList_Delete(t *testing.T) {
 			tt.run(l)
 
 			res := make([]string, 0, len(tt.expect))
-			item := l.GetFirst()
+			item, err := l.GetFirst()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetNext(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expect, res)
-			require.Equal(t, len(tt.expect), int(l.GetCount()))
+			count, err := l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expect), int(count))
 
 			res = make([]string, 0, len(tt.expect))
-			item = l.GetLast()
+			item, err = l.GetLast()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetPrev(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expectRev, res)
-			require.Equal(t, len(tt.expectRev), int(l.GetCount()))
+			count, err = l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expectRev), int(count))
 		})
 	}
 }
@@ -379,10 +401,10 @@ func TestKList_SetToBegin(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var err error
 			db := inmem.NewDB(ctx)
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l, err := New(ctx, name, db)
-			require.NoError(t, err)
+			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
 				err = l.Add([]byte(v))
@@ -392,24 +414,30 @@ func TestKList_SetToBegin(t *testing.T) {
 			tt.run(l)
 
 			res := make([]string, 0, len(tt.expect))
-			item := l.GetFirst()
+			item, err := l.GetFirst()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetNext(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expect, res)
-			require.Equal(t, len(tt.expect), int(l.GetCount()))
+			count, err := l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expect), int(count))
 
 			res = make([]string, 0, len(tt.expect))
-			item = l.GetLast()
+			item, err = l.GetLast()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetPrev(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expectRev, res)
-			require.Equal(t, len(tt.expectRev), int(l.GetCount()))
+			count, err = l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expectRev), int(count))
 		})
 	}
 }
@@ -507,10 +535,10 @@ func TestKList_SetToEnd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var err error
 			db := inmem.NewDB(ctx)
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l, err := New(ctx, name, db)
-			require.NoError(t, err)
+			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
 				err = l.Add([]byte(v))
@@ -520,24 +548,30 @@ func TestKList_SetToEnd(t *testing.T) {
 			tt.run(l)
 
 			res := make([]string, 0, len(tt.expect))
-			item := l.GetFirst()
+			item, err := l.GetFirst()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetNext(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expect, res)
-			require.Equal(t, len(tt.expect), int(l.GetCount()))
+			count, err := l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expect), int(count))
 
 			res = make([]string, 0, len(tt.expect))
-			item = l.GetLast()
+			item, err = l.GetLast()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetPrev(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expectRev, res)
-			require.Equal(t, len(tt.expectRev), int(l.GetCount()))
+			count, err = l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expectRev), int(count))
 		})
 	}
 }
@@ -677,10 +711,10 @@ func TestKList_SetAfter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var err error
 			db := inmem.NewDB(ctx)
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l, err := New(ctx, name, db)
-			require.NoError(t, err)
+			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
 				err = l.Add([]byte(v))
@@ -690,24 +724,30 @@ func TestKList_SetAfter(t *testing.T) {
 			tt.run(l)
 
 			res := make([]string, 0, len(tt.expect))
-			item := l.GetFirst()
+			item, err := l.GetFirst()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetNext(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expect, res)
-			require.Equal(t, len(tt.expect), int(l.GetCount()))
+			count, err := l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expect), int(count))
 
 			res = make([]string, 0, len(tt.expect))
-			item = l.GetLast()
+			item, err = l.GetLast()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetPrev(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expectRev, res)
-			require.Equal(t, len(tt.expectRev), int(l.GetCount()))
+			count, err = l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expectRev), int(count))
 		})
 	}
 }
@@ -847,10 +887,10 @@ func TestKList_SetBefore(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var err error
 			db := inmem.NewDB(ctx)
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l, err := New(ctx, name, db)
-			require.NoError(t, err)
+			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
 				err = l.Add([]byte(v))
@@ -860,24 +900,30 @@ func TestKList_SetBefore(t *testing.T) {
 			tt.run(l)
 
 			res := make([]string, 0, len(tt.expect))
-			item := l.GetFirst()
+			item, err := l.GetFirst()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetNext(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expect, res)
-			require.Equal(t, len(tt.expect), int(l.GetCount()))
+			count, err := l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expect), int(count))
 
 			res = make([]string, 0, len(tt.expect))
-			item = l.GetLast()
+			item, err = l.GetLast()
+			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
 				item, err = l.GetPrev(item)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expectRev, res)
-			require.Equal(t, len(tt.expectRev), int(l.GetCount()))
+			count, err = l.GetCount()
+			require.NoError(t, err)
+			require.Equal(t, len(tt.expectRev), int(count))
 		})
 	}
 }

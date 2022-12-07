@@ -24,16 +24,16 @@ type List interface {
 	SetToEnd(item []byte) error
 	SetAfter(item, root []byte) error
 	SetBefore(item, root []byte) error
-	GetFirst() []byte
-	GetLast() []byte
+	GetFirst() ([]byte, error)
+	GetLast() ([]byte, error)
 	GetNext(item []byte) ([]byte, error)
 	GetPrev(item []byte) ([]byte, error)
-	GetCount() int64
+	GetCount() (int64, error)
 	Pop() ([]byte, error)
 	Delete(item []byte) error
 	IsItemExists(item []byte) (bool, error)
-	IsItemFirst(item []byte) bool
-	IsItemLast(item []byte) bool
+	IsItemFirst(item []byte) (bool, error)
+	IsItemLast(item []byte) (bool, error)
 }
 
 type DB interface {
