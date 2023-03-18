@@ -39,7 +39,7 @@ run:
 
 .PHONY: proto
 proto:
-	rm -rf pkg/api/proto
+	rm -rf pkg/proto
 	mkdir -p pkg/proto
 	protoc -I$(shell pwd) --go_out=pkg/proto --go-grpc_out=pkg/proto $(PROTO_FILES)
 

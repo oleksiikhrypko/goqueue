@@ -4,37 +4,11 @@ import (
 	"fmt"
 
 	models "goqueue/pkg/proto/klist"
-	batchapi "goqueue/pkg/storage/batch"
+	"goqueue/pkg/storage/batch"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 )
-
-func (l *KList) writeRootItem(state *models.State, item []byte) error {
-	if !isEmpty(state) {
-		return errors.New("failed on call 'writeRootItem': list is not empty")
-	}
-	var err error
-
-	// update state
-	batch := batchapi.New(2)
-	state.FirstItem = item
-	state.LastItem = item
-	state.Count = 1
-	if err = l.appendBatchSaveState(batch, state); err != nil {
-		return err
-	}
-	// save item
-	rec := Record{
-		Id:   item,
-		Next: nil,
-		Prev: nil,
-	}
-	if err = l.appendBatchSaveRecord(batch, &rec); err != nil {
-		return err
-	}
-	return l.writeBatch(batch)
-}
 
 func (l *KList) readRecord(item []byte) (*Record, error) {
 	if item == nil {
@@ -83,9 +57,34 @@ func (l *KList) loadState() (*models.State, error) {
 	return &state, nil
 }
 
-func (l *KList) add(state *models.State, item []byte) (err error) {
+func (l *KList) writeRootItem(actions batch.List, state *models.State, item []byte) error {
+	if !isEmpty(state) {
+		return errors.New("failed on call 'writeRootItem': list is not empty")
+	}
+	var err error
+
+	// update state
+	state.FirstItem = item
+	state.LastItem = item
+	state.Count = 1
+	if err = l.appendBatchSaveState(actions, state); err != nil {
+		return err
+	}
+	// save item
+	rec := Record{
+		Id:   item,
+		Next: nil,
+		Prev: nil,
+	}
+	if err = l.appendBatchSaveRecord(actions, &rec); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l *KList) add(actions batch.List, state *models.State, item []byte) (err error) {
 	if isEmpty(state) {
-		return l.writeRootItem(state, item)
+		return l.writeRootItem(actions, state, item)
 	}
 
 	// if list already has item -> skip adding
@@ -102,12 +101,10 @@ func (l *KList) add(state *models.State, item []byte) (err error) {
 		return err
 	}
 
-	batch := batchapi.New(5)
-
 	// update state
 	state.LastItem = item
 	state.Count += 1
-	if err = l.appendBatchSaveState(batch, state); err != nil {
+	if err = l.appendBatchSaveState(actions, state); err != nil {
 		return err
 	}
 
@@ -115,16 +112,16 @@ func (l *KList) add(state *models.State, item []byte) (err error) {
 	rec := Record{
 		Id: item,
 	}
-	if err = l.appendBatchInsertAfterRecord(batch, &rec, last); err != nil {
+	if err = l.appendBatchInsertAfterRecord(actions, &rec, last); err != nil {
 		return err
 	}
 
-	return l.writeBatch(batch)
+	return nil
 }
 
-func (l *KList) setToBegin(state *models.State, item []byte) (err error) {
+func (l *KList) setToBegin(actions batch.List, state *models.State, item []byte) (err error) {
 	if isEmpty(state) {
-		return l.writeRootItem(state, item)
+		return l.writeRootItem(actions, state, item)
 	}
 
 	if isItemFirst(state, item) {
@@ -145,15 +142,13 @@ func (l *KList) setToBegin(state *models.State, item []byte) (err error) {
 		return err
 	}
 
-	batch := batchapi.New(7)
-
 	// cut item
 	if exists {
 		rec, err = l.readRecord(item)
 		if err != nil {
 			return err
 		}
-		if err = l.appendBatchCutRecord(batch, rec); err != nil {
+		if err = l.appendBatchCutRecord(actions, rec); err != nil {
 			return err
 		}
 		if isItemFirst(state, item) {
@@ -169,21 +164,21 @@ func (l *KList) setToBegin(state *models.State, item []byte) (err error) {
 		state.Count += 1
 	}
 	state.FirstItem = item
-	if err = l.appendBatchSaveState(batch, state); err != nil {
+	if err = l.appendBatchSaveState(actions, state); err != nil {
 		return err
 	}
 
 	// insert before first
-	if err = l.appendBatchInsertBeforeRecord(batch, rec, first); err != nil {
+	if err = l.appendBatchInsertBeforeRecord(actions, rec, first); err != nil {
 		return err
 	}
 
-	return l.writeBatch(batch)
+	return nil
 }
 
-func (l *KList) setToEnd(state *models.State, item []byte) error {
+func (l *KList) setToEnd(actions batch.List, state *models.State, item []byte) error {
 	if isEmpty(state) {
-		return l.writeRootItem(state, item)
+		return l.writeRootItem(actions, state, item)
 	}
 
 	if isItemLast(state, item) {
@@ -204,15 +199,13 @@ func (l *KList) setToEnd(state *models.State, item []byte) error {
 		return err
 	}
 
-	batch := batchapi.New(7)
-
 	// cut item
 	if exists {
 		rec, err = l.readRecord(item)
 		if err != nil {
 			return err
 		}
-		if err = l.appendBatchCutRecord(batch, rec); err != nil {
+		if err = l.appendBatchCutRecord(actions, rec); err != nil {
 			return err
 		}
 		if isItemFirst(state, item) {
@@ -228,19 +221,19 @@ func (l *KList) setToEnd(state *models.State, item []byte) error {
 		state.Count += 1
 	}
 	state.LastItem = item
-	if err = l.appendBatchSaveState(batch, state); err != nil {
+	if err = l.appendBatchSaveState(actions, state); err != nil {
 		return err
 	}
 
 	// insert after last
-	if err = l.appendBatchInsertAfterRecord(batch, rec, last); err != nil {
+	if err = l.appendBatchInsertAfterRecord(actions, rec, last); err != nil {
 		return err
 	}
 
-	return l.writeBatch(batch)
+	return nil
 }
 
-func (l *KList) setAfter(state *models.State, item, root []byte) error {
+func (l *KList) setAfter(actions batch.List, state *models.State, item, root []byte) error {
 	if isEqual(item, root) {
 		return errors.New("input items are equals")
 	}
@@ -270,15 +263,13 @@ func (l *KList) setAfter(state *models.State, item, root []byte) error {
 		return err
 	}
 
-	batch := batchapi.New(7)
-
 	// cut item
 	if exists {
 		rec, err = l.readRecord(item)
 		if err != nil {
 			return err
 		}
-		if err = l.appendBatchCutRecord(batch, rec); err != nil {
+		if err = l.appendBatchCutRecord(actions, rec); err != nil {
 			return err
 		}
 		if isItemFirst(state, item) {
@@ -296,19 +287,19 @@ func (l *KList) setAfter(state *models.State, item, root []byte) error {
 	if isItemLast(state, root) {
 		state.LastItem = item
 	}
-	if err = l.appendBatchSaveState(batch, state); err != nil {
+	if err = l.appendBatchSaveState(actions, state); err != nil {
 		return err
 	}
 
 	// insert after root
-	if err = l.appendBatchInsertAfterRecord(batch, rec, rootRec); err != nil {
+	if err = l.appendBatchInsertAfterRecord(actions, rec, rootRec); err != nil {
 		return err
 	}
 
-	return l.writeBatch(batch)
+	return nil
 }
 
-func (l *KList) setBefore(state *models.State, item, root []byte) error {
+func (l *KList) setBefore(actions batch.List, state *models.State, item, root []byte) error {
 	if isEqual(item, root) {
 		return errors.New("input items are equals")
 	}
@@ -338,15 +329,13 @@ func (l *KList) setBefore(state *models.State, item, root []byte) error {
 		return err
 	}
 
-	batch := batchapi.New(7)
-
 	// cut item
 	if exists {
 		rec, err = l.readRecord(item)
 		if err != nil {
 			return err
 		}
-		if err = l.appendBatchCutRecord(batch, rec); err != nil {
+		if err = l.appendBatchCutRecord(actions, rec); err != nil {
 			return err
 		}
 		if isItemFirst(state, item) {
@@ -363,19 +352,19 @@ func (l *KList) setBefore(state *models.State, item, root []byte) error {
 	if isItemFirst(state, root) {
 		state.FirstItem = item
 	}
-	if err = l.appendBatchSaveState(batch, state); err != nil {
+	if err = l.appendBatchSaveState(actions, state); err != nil {
 		return err
 	}
 
 	// insert after root
-	if err = l.appendBatchInsertBeforeRecord(batch, rec, rootRec); err != nil {
+	if err = l.appendBatchInsertBeforeRecord(actions, rec, rootRec); err != nil {
 		return err
 	}
 
-	return l.writeBatch(batch)
+	return nil
 }
 
-func (l *KList) pop(state *models.State) ([]byte, error) {
+func (l *KList) pop(actions batch.List, state *models.State) ([]byte, error) {
 	if isEmpty(state) {
 		return nil, nil
 	}
@@ -385,34 +374,28 @@ func (l *KList) pop(state *models.State) ([]byte, error) {
 		return nil, err
 	}
 
-	batch := batchapi.New(4)
-
 	// update state
 	state.FirstItem = first.Next
 	if isItemLast(state, first.Id) {
 		state.LastItem = nil
 	}
 	state.Count -= 1
-	if err = l.appendBatchSaveState(batch, state); err != nil {
+	if err = l.appendBatchSaveState(actions, state); err != nil {
 		return nil, err
 	}
 
 	// cut from queue
-	if err = l.appendBatchCutRecord(batch, first); err != nil {
+	if err = l.appendBatchCutRecord(actions, first); err != nil {
 		return nil, err
 	}
 
 	// delete
-	batch.Delete(buildItemKey(l.name, first.Id))
-
-	if err = l.db.Write(batch); err != nil {
-		return nil, errors.Wrap(err, "failed to update data")
-	}
+	actions.Delete(buildItemKey(l.name, first.Id))
 
 	return first.Id, nil
 }
 
-func (l *KList) delete(state *models.State, item []byte) error {
+func (l *KList) delete(actions batch.List, state *models.State, item []byte) error {
 	exists, err := l.isItemExists(item)
 	if err != nil {
 		return err
@@ -426,8 +409,6 @@ func (l *KList) delete(state *models.State, item []byte) error {
 		return err
 	}
 
-	batch := batchapi.New(4)
-
 	// update state
 	if isItemFirst(state, item) {
 		state.FirstItem = rec.Next
@@ -436,41 +417,35 @@ func (l *KList) delete(state *models.State, item []byte) error {
 		state.LastItem = rec.Prev
 	}
 	state.Count -= 1
-	if err = l.appendBatchSaveState(batch, state); err != nil {
+	if err = l.appendBatchSaveState(actions, state); err != nil {
 		return err
 	}
 
 	// cut from queue
-	if err = l.appendBatchCutRecord(batch, rec); err != nil {
+	if err = l.appendBatchCutRecord(actions, rec); err != nil {
 		return err
 	}
 
 	// delete
-	batch.Delete(buildItemKey(l.name, rec.Id))
-
-	if err = l.db.Write(batch); err != nil {
-		return errors.Wrap(err, "failed to update data")
-	}
+	actions.Delete(buildItemKey(l.name, rec.Id))
 
 	return nil
 }
 
-// Batch helpers:
-
 // save state
 // batch cap=1
-func (l *KList) appendBatchSaveState(batch *batchapi.Batch, state *models.State) error {
+func (l *KList) appendBatchSaveState(actions batch.List, state *models.State) error {
 	v, err := proto.Marshal(state)
 	if err != nil {
 		return errors.Wrap(err, "failed to build state data model")
 	}
-	batch.Put(buildStateKey(l.name), v)
+	actions.Put(buildStateKey(l.name), v)
 	return nil
 }
 
 // save record
 // batch cap=1
-func (l *KList) appendBatchSaveRecord(batch *batchapi.Batch, rec *Record) error {
+func (l *KList) appendBatchSaveRecord(actions batch.List, rec *Record) error {
 	v, err := proto.Marshal(&models.Item{
 		Next: rec.Next,
 		Prev: rec.Prev,
@@ -478,13 +453,13 @@ func (l *KList) appendBatchSaveRecord(batch *batchapi.Batch, rec *Record) error 
 	if err != nil {
 		return errors.Wrap(err, "failed to build state data model")
 	}
-	batch.Put(buildItemKey(l.name, rec.Id), v)
+	actions.Put(buildItemKey(l.name, rec.Id), v)
 	return nil
 }
 
 // cut records from queue
 // batch cap=2
-func (l *KList) appendBatchCutRecord(batch *batchapi.Batch, rec *Record) error {
+func (l *KList) appendBatchCutRecord(actions batch.List, rec *Record) error {
 	// update prev if exists
 	if rec.Prev != nil {
 		prev, err := l.readRecord(rec.Prev)
@@ -492,7 +467,7 @@ func (l *KList) appendBatchCutRecord(batch *batchapi.Batch, rec *Record) error {
 			return err
 		}
 		prev.Next = rec.Next
-		if err = l.appendBatchSaveRecord(batch, prev); err != nil {
+		if err = l.appendBatchSaveRecord(actions, prev); err != nil {
 			return err
 		}
 	}
@@ -504,7 +479,7 @@ func (l *KList) appendBatchCutRecord(batch *batchapi.Batch, rec *Record) error {
 			return err
 		}
 		next.Prev = rec.Prev
-		if err = l.appendBatchSaveRecord(batch, next); err != nil {
+		if err = l.appendBatchSaveRecord(actions, next); err != nil {
 			return err
 		}
 	}
@@ -513,7 +488,7 @@ func (l *KList) appendBatchCutRecord(batch *batchapi.Batch, rec *Record) error {
 
 // insert record after item
 // batch cap=4
-func (l *KList) appendBatchInsertAfterRecord(batch *batchapi.Batch, rec *Record, root *Record) error {
+func (l *KList) appendBatchInsertAfterRecord(actions batch.List, rec *Record, root *Record) error {
 	// in case if it's sequence rec <- root
 	if isEqual(rec.Id, root.Prev) {
 		root.Prev = rec.Prev
@@ -523,7 +498,7 @@ func (l *KList) appendBatchInsertAfterRecord(batch *batchapi.Batch, rec *Record,
 				return err
 			}
 			rprev.Next = root.Id
-			if err = l.appendBatchSaveRecord(batch, rprev); err != nil {
+			if err = l.appendBatchSaveRecord(actions, rprev); err != nil {
 				return err
 			}
 		}
@@ -532,7 +507,7 @@ func (l *KList) appendBatchInsertAfterRecord(batch *batchapi.Batch, rec *Record,
 	// update rec
 	rec.Prev = root.Id
 	rec.Next = root.Next
-	if err := l.appendBatchSaveRecord(batch, rec); err != nil {
+	if err := l.appendBatchSaveRecord(actions, rec); err != nil {
 		return err
 	}
 
@@ -543,13 +518,13 @@ func (l *KList) appendBatchInsertAfterRecord(batch *batchapi.Batch, rec *Record,
 			return err
 		}
 		next.Prev = rec.Id
-		if err = l.appendBatchSaveRecord(batch, next); err != nil {
+		if err = l.appendBatchSaveRecord(actions, next); err != nil {
 			return err
 		}
 	}
 
 	root.Next = rec.Id
-	if err := l.appendBatchSaveRecord(batch, root); err != nil {
+	if err := l.appendBatchSaveRecord(actions, root); err != nil {
 		return err
 	}
 
@@ -558,7 +533,7 @@ func (l *KList) appendBatchInsertAfterRecord(batch *batchapi.Batch, rec *Record,
 
 // insert record before item
 // batch cap=4
-func (l *KList) appendBatchInsertBeforeRecord(batch *batchapi.Batch, rec *Record, root *Record) error {
+func (l *KList) appendBatchInsertBeforeRecord(actions batch.List, rec *Record, root *Record) error {
 	// in case if it's sequence root -> rec
 	if isEqual(rec.Id, root.Next) {
 		root.Next = rec.Next
@@ -568,7 +543,7 @@ func (l *KList) appendBatchInsertBeforeRecord(batch *batchapi.Batch, rec *Record
 				return err
 			}
 			rnext.Prev = root.Id
-			if err = l.appendBatchSaveRecord(batch, rnext); err != nil {
+			if err = l.appendBatchSaveRecord(actions, rnext); err != nil {
 				return err
 			}
 		}
@@ -577,7 +552,7 @@ func (l *KList) appendBatchInsertBeforeRecord(batch *batchapi.Batch, rec *Record
 	// update rec
 	rec.Prev = root.Prev
 	rec.Next = root.Id
-	if err := l.appendBatchSaveRecord(batch, rec); err != nil {
+	if err := l.appendBatchSaveRecord(actions, rec); err != nil {
 		return err
 	}
 
@@ -588,14 +563,14 @@ func (l *KList) appendBatchInsertBeforeRecord(batch *batchapi.Batch, rec *Record
 			return err
 		}
 		prev.Next = rec.Id
-		if err = l.appendBatchSaveRecord(batch, prev); err != nil {
+		if err = l.appendBatchSaveRecord(actions, prev); err != nil {
 			return err
 		}
 	}
 
 	// update root
 	root.Prev = rec.Id
-	if err := l.appendBatchSaveRecord(batch, root); err != nil {
+	if err := l.appendBatchSaveRecord(actions, root); err != nil {
 		return err
 	}
 

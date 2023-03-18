@@ -1,21 +1,10 @@
 package klist
 
 import (
-	"sync"
-
-	batchapi "goqueue/pkg/storage/batch"
+	"goqueue/pkg/storage/batch"
 
 	"golang.org/x/net/context"
 )
-
-type DB interface {
-	Get(key []byte) ([]byte, error)
-	Put(key, value []byte) error
-	Delete(key []byte) error
-	Has(key []byte) (bool, error)
-	Write(batch batchapi.List) error
-	IsNotFoundErr(err error) bool
-}
 
 func New(ctx context.Context, name string, db DB) *KList {
 	list := KList{
@@ -30,97 +19,72 @@ type KList struct {
 	ctx  context.Context
 	db   DB
 	name []byte
-	rw   sync.RWMutex
 }
 
-func (l *KList) Add(item []byte) error {
-	l.rw.Lock()
-	defer l.rw.Unlock()
-
+func (l *KList) Add(actions batch.List, item []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
 	}
 
-	return l.add(state, item)
+	return l.add(actions, state, item)
 }
 
-func (l *KList) SetToBegin(item []byte) error {
-	l.rw.Lock()
-	defer l.rw.Unlock()
-
+func (l *KList) SetToBegin(actions batch.List, item []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
 	}
 
-	return l.setToBegin(state, item)
+	return l.setToBegin(actions, state, item)
 }
 
-func (l *KList) SetToEnd(item []byte) error {
-	l.rw.Lock()
-	defer l.rw.Unlock()
-
+func (l *KList) SetToEnd(actions batch.List, item []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
 	}
 
-	return l.setToEnd(state, item)
+	return l.setToEnd(actions, state, item)
 }
 
-func (l *KList) SetAfter(item, root []byte) error {
-	l.rw.Lock()
-	defer l.rw.Unlock()
-
+func (l *KList) SetAfter(actions batch.List, item, root []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
 	}
 
-	return l.setAfter(state, item, root)
+	return l.setAfter(actions, state, item, root)
 }
 
-func (l *KList) SetBefore(item, root []byte) error {
-	l.rw.Lock()
-	defer l.rw.Unlock()
-
+func (l *KList) SetBefore(actions batch.List, item, root []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
 	}
 
-	return l.setBefore(state, item, root)
+	return l.setBefore(actions, state, item, root)
 }
 
-func (l *KList) Pop() ([]byte, error) {
-	l.rw.Lock()
-	defer l.rw.Unlock()
-
+func (l *KList) Pop(actions batch.List) ([]byte, error) {
 	state, err := l.loadState()
 	if err != nil {
 		return nil, err
 	}
 
-	return l.pop(state)
+	return l.pop(actions, state)
 }
 
-func (l *KList) Delete(item []byte) error {
-	l.rw.Lock()
-	defer l.rw.Unlock()
-
+func (l *KList) Delete(actions batch.List, item []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
 	}
 
-	return l.delete(state, item)
+	return l.delete(actions, state, item)
 }
 
 func (l *KList) GetFirst() ([]byte, error) {
-	l.rw.RLock()
-	defer l.rw.RUnlock()
-
 	state, err := l.loadState()
 	if err != nil {
 		return nil, err
@@ -130,9 +94,6 @@ func (l *KList) GetFirst() ([]byte, error) {
 }
 
 func (l *KList) GetLast() ([]byte, error) {
-	l.rw.RLock()
-	defer l.rw.RUnlock()
-
 	state, err := l.loadState()
 	if err != nil {
 		return nil, err
@@ -142,9 +103,6 @@ func (l *KList) GetLast() ([]byte, error) {
 }
 
 func (l *KList) GetNext(item []byte) ([]byte, error) {
-	l.rw.RLock()
-	defer l.rw.RUnlock()
-
 	rec, err := l.readRecord(item)
 	if err != nil {
 		return nil, err
@@ -154,9 +112,6 @@ func (l *KList) GetNext(item []byte) ([]byte, error) {
 }
 
 func (l *KList) GetPrev(item []byte) ([]byte, error) {
-	l.rw.RLock()
-	defer l.rw.RUnlock()
-
 	rec, err := l.readRecord(item)
 	if err != nil {
 		return nil, err
@@ -166,9 +121,6 @@ func (l *KList) GetPrev(item []byte) ([]byte, error) {
 }
 
 func (l *KList) GetCount() (int64, error) {
-	l.rw.RLock()
-	defer l.rw.RUnlock()
-
 	state, err := l.loadState()
 	if err != nil {
 		return -1, err
@@ -178,16 +130,10 @@ func (l *KList) GetCount() (int64, error) {
 }
 
 func (l *KList) IsItemExists(item []byte) (bool, error) {
-	l.rw.RLock()
-	defer l.rw.RUnlock()
-
 	return l.isItemExists(item)
 }
 
 func (l *KList) IsItemFirst(item []byte) (bool, error) {
-	l.rw.RLock()
-	defer l.rw.RUnlock()
-
 	state, err := l.loadState()
 	if err != nil {
 		return false, err
@@ -197,9 +143,6 @@ func (l *KList) IsItemFirst(item []byte) (bool, error) {
 }
 
 func (l *KList) IsItemLast(item []byte) (bool, error) {
-	l.rw.RLock()
-	defer l.rw.RUnlock()
-
 	state, err := l.loadState()
 	if err != nil {
 		return false, err

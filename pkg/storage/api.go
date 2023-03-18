@@ -19,18 +19,18 @@ type Consumer interface {
 }
 
 type List interface {
-	Add(item []byte) error
-	SetToBegin(item []byte) error
-	SetToEnd(item []byte) error
-	SetAfter(item, root []byte) error
-	SetBefore(item, root []byte) error
+	Add(actions batch.List, item []byte) error
+	SetToBegin(actions batch.List, item []byte) error
+	SetToEnd(actions batch.List, item []byte) error
+	SetAfter(actions batch.List, item, root []byte) error
+	SetBefore(actions batch.List, item, root []byte) error
 	GetFirst() ([]byte, error)
 	GetLast() ([]byte, error)
 	GetNext(item []byte) ([]byte, error)
 	GetPrev(item []byte) ([]byte, error)
 	GetCount() (int64, error)
-	Pop() ([]byte, error)
-	Delete(item []byte) error
+	Pop(actions batch.List) ([]byte, error)
+	Delete(actions batch.List, item []byte) error
 	IsItemExists(item []byte) (bool, error)
 	IsItemFirst(item []byte) (bool, error)
 	IsItemLast(item []byte) (bool, error)

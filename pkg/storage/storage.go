@@ -1,9 +1,7 @@
-package leveldb
+package storage
 
 import (
 	"log"
-
-	"goqueue/pkg/storage"
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"golang.org/x/net/context"
@@ -38,8 +36,8 @@ func (s Storage) Push(topic, sequenceKey, msgID string, payload []byte) error {
 	return nil
 }
 
-func (s Storage) Get(topic string) (*storage.Message, error) {
-	return &storage.Message{}, nil
+func (s Storage) Get(topic string) (*Message, error) {
+	return &Message{}, nil
 }
 
 func (s Storage) Commit(msgID string) error {

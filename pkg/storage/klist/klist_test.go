@@ -5,7 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"goqueue/pkg/storage/inmem"
+	"goqueue/pkg/storage/batch"
+	"goqueue/pkg/storage/db/inmem"
 
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -23,7 +24,10 @@ func Test_KList_general(t *testing.T) {
 	in := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"}
 
 	for _, v := range in {
-		err = list.Add([]byte(v))
+		actions := batch.New(10)
+		err = list.Add(actions, []byte(v))
+		require.NoError(t, err)
+		err = db.Write(actions)
 		require.NoError(t, err)
 	}
 
@@ -99,7 +103,10 @@ func TestKList_Add(t *testing.T) {
 			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
-				err = l.Add([]byte(v))
+				actions := batch.New(10)
+				err = l.Add(actions, []byte(v))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			}
 
@@ -154,16 +161,25 @@ func TestKList_Pop(t *testing.T) {
 			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
-				err = l.Add([]byte(v))
+				actions := batch.New(10)
+				err = l.Add(actions, []byte(v))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			}
 
+			actions := batch.New(10)
 			res := make([]string, 0, len(tt.expect))
-			item, err := l.Pop()
+			item, err := l.Pop(actions)
+			require.NoError(t, err)
+			err = db.Write(actions)
 			require.NoError(t, err)
 			for item != nil {
 				res = append(res, string(item))
-				item, err = l.Pop()
+				actions = batch.New(10)
+				item, err = l.Pop(actions)
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			}
 			require.Equal(t, tt.expect, res)
@@ -176,6 +192,8 @@ func TestKList_Pop(t *testing.T) {
 
 func TestKList_Delete(t *testing.T) {
 	ctx := context.Background()
+
+	db := inmem.NewDB(ctx)
 
 	tests := []struct {
 		name      string
@@ -190,7 +208,10 @@ func TestKList_Delete(t *testing.T) {
 			expect:    []string{"2", "3", "4", "5", "6", "7", "8", "9"},
 			expectRev: []string{"9", "8", "7", "6", "5", "4", "3", "2"},
 			run: func(l *KList) {
-				err := l.Delete([]byte("1"))
+				actions := batch.New(10)
+				err := l.Delete(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -200,7 +221,10 @@ func TestKList_Delete(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4", "5", "6", "7", "8"},
 			expectRev: []string{"8", "7", "6", "5", "4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.Delete([]byte("9"))
+				actions := batch.New(10)
+				err := l.Delete(actions, []byte("9"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -210,7 +234,10 @@ func TestKList_Delete(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4", "6", "7", "8", "9"},
 			expectRev: []string{"9", "8", "7", "6", "4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.Delete([]byte("5"))
+				actions := batch.New(10)
+				err := l.Delete(actions, []byte("5"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -220,7 +247,10 @@ func TestKList_Delete(t *testing.T) {
 			expect:    []string{"1", "3"},
 			expectRev: []string{"3", "1"},
 			run: func(l *KList) {
-				err := l.Delete([]byte("2"))
+				actions := batch.New(10)
+				err := l.Delete(actions, []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -230,7 +260,10 @@ func TestKList_Delete(t *testing.T) {
 			expect:    []string{"1"},
 			expectRev: []string{"1"},
 			run: func(l *KList) {
-				err := l.Delete([]byte("2"))
+				actions := batch.New(10)
+				err := l.Delete(actions, []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -240,7 +273,10 @@ func TestKList_Delete(t *testing.T) {
 			expect:    []string{"2"},
 			expectRev: []string{"2"},
 			run: func(l *KList) {
-				err := l.Delete([]byte("1"))
+				actions := batch.New(10)
+				err := l.Delete(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -250,7 +286,10 @@ func TestKList_Delete(t *testing.T) {
 			expect:    []string{},
 			expectRev: []string{},
 			run: func(l *KList) {
-				err := l.Delete([]byte("1"))
+				actions := batch.New(10)
+				err := l.Delete(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -260,7 +299,10 @@ func TestKList_Delete(t *testing.T) {
 			expect:    []string{},
 			expectRev: []string{},
 			run: func(l *KList) {
-				err := l.Delete([]byte("1"))
+				actions := batch.New(10)
+				err := l.Delete(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -268,12 +310,14 @@ func TestKList_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			db := inmem.NewDB(ctx)
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
 			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
-				err = l.Add([]byte(v))
+				actions := batch.New(10)
+				err = l.Add(actions, []byte(v))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			}
 
@@ -311,6 +355,8 @@ func TestKList_Delete(t *testing.T) {
 func TestKList_SetToBegin(t *testing.T) {
 	ctx := context.Background()
 
+	db := inmem.NewDB(ctx)
+
 	tests := []struct {
 		name      string
 		in        []string
@@ -324,7 +370,10 @@ func TestKList_SetToBegin(t *testing.T) {
 			expect:    []string{"1"},
 			expectRev: []string{"1"},
 			run: func(l *KList) {
-				err := l.SetToBegin([]byte("1"))
+				actions := batch.New(10)
+				err := l.SetToBegin(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -334,7 +383,10 @@ func TestKList_SetToBegin(t *testing.T) {
 			expect:    []string{"1", "2"},
 			expectRev: []string{"2", "1"},
 			run: func(l *KList) {
-				err := l.SetToBegin([]byte("1"))
+				actions := batch.New(10)
+				err := l.SetToBegin(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -344,7 +396,10 @@ func TestKList_SetToBegin(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToBegin([]byte("1"))
+				actions := batch.New(10)
+				err := l.SetToBegin(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -354,7 +409,10 @@ func TestKList_SetToBegin(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToBegin([]byte("1"))
+				actions := batch.New(10)
+				err := l.SetToBegin(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -364,7 +422,10 @@ func TestKList_SetToBegin(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToBegin([]byte("1"))
+				actions := batch.New(10)
+				err := l.SetToBegin(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -374,7 +435,10 @@ func TestKList_SetToBegin(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToBegin([]byte("1"))
+				actions := batch.New(10)
+				err := l.SetToBegin(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -384,7 +448,10 @@ func TestKList_SetToBegin(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToBegin([]byte("1"))
+				actions := batch.New(10)
+				err := l.SetToBegin(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -394,7 +461,10 @@ func TestKList_SetToBegin(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToBegin([]byte("1"))
+				actions := batch.New(10)
+				err := l.SetToBegin(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -402,12 +472,14 @@ func TestKList_SetToBegin(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			db := inmem.NewDB(ctx)
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
 			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
-				err = l.Add([]byte(v))
+				actions := batch.New(10)
+				err = l.Add(actions, []byte(v))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			}
 
@@ -445,6 +517,8 @@ func TestKList_SetToBegin(t *testing.T) {
 func TestKList_SetToEnd(t *testing.T) {
 	ctx := context.Background()
 
+	db := inmem.NewDB(ctx)
+
 	tests := []struct {
 		name      string
 		in        []string
@@ -458,7 +532,10 @@ func TestKList_SetToEnd(t *testing.T) {
 			expect:    []string{"1"},
 			expectRev: []string{"1"},
 			run: func(l *KList) {
-				err := l.SetToEnd([]byte("1"))
+				actions := batch.New(10)
+				err := l.SetToEnd(actions, []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -468,7 +545,10 @@ func TestKList_SetToEnd(t *testing.T) {
 			expect:    []string{"1", "2"},
 			expectRev: []string{"2", "1"},
 			run: func(l *KList) {
-				err := l.SetToEnd([]byte("2"))
+				actions := batch.New(10)
+				err := l.SetToEnd(actions, []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -478,7 +558,10 @@ func TestKList_SetToEnd(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToEnd([]byte("3"))
+				actions := batch.New(10)
+				err := l.SetToEnd(actions, []byte("3"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -488,7 +571,10 @@ func TestKList_SetToEnd(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToEnd([]byte("4"))
+				actions := batch.New(10)
+				err := l.SetToEnd(actions, []byte("4"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -498,7 +584,10 @@ func TestKList_SetToEnd(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToEnd([]byte("3"))
+				actions := batch.New(10)
+				err := l.SetToEnd(actions, []byte("3"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -508,7 +597,10 @@ func TestKList_SetToEnd(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToEnd([]byte("3"))
+				actions := batch.New(10)
+				err := l.SetToEnd(actions, []byte("3"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -518,7 +610,10 @@ func TestKList_SetToEnd(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToEnd([]byte("3"))
+				actions := batch.New(10)
+				err := l.SetToEnd(actions, []byte("3"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -528,7 +623,10 @@ func TestKList_SetToEnd(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetToEnd([]byte("4"))
+				actions := batch.New(10)
+				err := l.SetToEnd(actions, []byte("4"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -536,12 +634,15 @@ func TestKList_SetToEnd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			db := inmem.NewDB(ctx)
+
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
 			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
-				err = l.Add([]byte(v))
+				actions := batch.New(10)
+				err = l.Add(actions, []byte(v))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			}
 
@@ -579,6 +680,8 @@ func TestKList_SetToEnd(t *testing.T) {
 func TestKList_SetAfter(t *testing.T) {
 	ctx := context.Background()
 
+	db := inmem.NewDB(ctx)
+
 	tests := []struct {
 		name      string
 		in        []string
@@ -592,10 +695,13 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{},
 			expectRev: []string{},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("1"), []byte("1"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("1"), []byte("1"))
 				require.Error(t, err)
-				err = l.SetAfter([]byte("1"), []byte("2"))
+				err = l.SetAfter(actions, []byte("1"), []byte("2"))
 				require.Error(t, err)
+				err = db.Write(actions)
+				require.NoError(t, err)
 			},
 		},
 		{
@@ -604,7 +710,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2"},
 			expectRev: []string{"2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("2"), []byte("1"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("2"), []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -614,7 +723,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("3"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("3"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -624,7 +736,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("2"), []byte("1"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("2"), []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -634,7 +749,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("3"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("3"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -644,7 +762,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2"},
 			expectRev: []string{"2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("2"), []byte("1"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("2"), []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -654,7 +775,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("3"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("3"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -664,7 +788,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("2"), []byte("1"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("2"), []byte("1"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -674,7 +801,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("3"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("3"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -684,7 +814,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("3"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("3"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -694,7 +827,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("4"), []byte("3"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("4"), []byte("3"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -704,7 +840,10 @@ func TestKList_SetAfter(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetAfter([]byte("3"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetAfter(actions, []byte("3"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -712,12 +851,15 @@ func TestKList_SetAfter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			db := inmem.NewDB(ctx)
+
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
 			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
-				err = l.Add([]byte(v))
+				actions := batch.New(10)
+				err = l.Add(actions, []byte(v))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			}
 
@@ -755,6 +897,8 @@ func TestKList_SetAfter(t *testing.T) {
 func TestKList_SetBefore(t *testing.T) {
 	ctx := context.Background()
 
+	db := inmem.NewDB(ctx)
+
 	tests := []struct {
 		name      string
 		in        []string
@@ -768,10 +912,13 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{},
 			expectRev: []string{},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("1"), []byte("1"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("1"), []byte("1"))
 				require.Error(t, err)
-				err = l.SetBefore([]byte("1"), []byte("2"))
+				err = l.SetBefore(actions, []byte("1"), []byte("2"))
 				require.Error(t, err)
+				err = db.Write(actions)
+				require.NoError(t, err)
 			},
 		},
 		{
@@ -780,7 +927,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2"},
 			expectRev: []string{"2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("1"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("1"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -790,7 +940,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("2"), []byte("3"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("2"), []byte("3"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -800,7 +953,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("2"), []byte("3"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("2"), []byte("3"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -810,7 +966,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("3"), []byte("4"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("3"), []byte("4"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -820,7 +979,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2"},
 			expectRev: []string{"2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("1"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("1"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -830,7 +992,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("1"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("1"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -840,7 +1005,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("1"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("1"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -850,7 +1018,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2", "3"},
 			expectRev: []string{"3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("2"), []byte("3"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("2"), []byte("3"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -860,7 +1031,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("2"), []byte("3"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("2"), []byte("3"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -870,7 +1044,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("2"), []byte("3"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("2"), []byte("3"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -880,7 +1057,10 @@ func TestKList_SetBefore(t *testing.T) {
 			expect:    []string{"1", "2", "3", "4"},
 			expectRev: []string{"4", "3", "2", "1"},
 			run: func(l *KList) {
-				err := l.SetBefore([]byte("1"), []byte("2"))
+				actions := batch.New(10)
+				err := l.SetBefore(actions, []byte("1"), []byte("2"))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			},
 		},
@@ -888,12 +1068,14 @@ func TestKList_SetBefore(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			db := inmem.NewDB(ctx)
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
 			l := New(ctx, name, db)
 
 			for _, v := range tt.in {
-				err = l.Add([]byte(v))
+				actions := batch.New(10)
+				err = l.Add(actions, []byte(v))
+				require.NoError(t, err)
+				err = db.Write(actions)
 				require.NoError(t, err)
 			}
 

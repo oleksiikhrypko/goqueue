@@ -1,10 +1,14 @@
 package klist
 
 import (
-	"goqueue/pkg/storage/batch"
-
 	"github.com/pkg/errors"
 )
+
+type DB interface {
+	Get(key []byte) ([]byte, error)
+	Has(key []byte) (bool, error)
+	IsNotFoundErr(err error) bool
+}
 
 func (l *KList) readValue(key []byte) ([]byte, error) {
 	value, err := l.db.Get(key)
@@ -18,30 +22,6 @@ func (l *KList) readValue(key []byte) ([]byte, error) {
 		return nil, nil
 	}
 	return value, nil
-}
-
-func (l *KList) writeValue(key, value []byte) error {
-	err := l.db.Put(key, value)
-	if err != nil {
-		return errors.Wrap(err, "failed to write data")
-	}
-	return nil
-}
-
-func (l *KList) writeBatch(actions *batch.Batch) error {
-	err := l.db.Write(actions)
-	if err != nil {
-		return errors.Wrap(err, "failed to write batch")
-	}
-	return nil
-}
-
-func (l *KList) deleteValue(key []byte) error {
-	err := l.db.Delete(key)
-	if err != nil {
-		return errors.Wrap(err, "failed to delete data")
-	}
-	return nil
 }
 
 func (l *KList) hasKey(key []byte) (bool, error) {

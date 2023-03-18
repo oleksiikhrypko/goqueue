@@ -8,8 +8,8 @@ import (
 	"time"
 
 	storage "goqueue/pkg/storage"
+	listdb "goqueue/pkg/storage/db/leveldb"
 	klist "goqueue/pkg/storage/klist"
-	listdb "goqueue/pkg/storage/leveldb"
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"golang.org/x/net/context"
