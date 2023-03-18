@@ -6,16 +6,14 @@ import (
 	batchapi "goqueue/pkg/storage/batch"
 
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
 )
 
 var (
 	ErrNotFound = errors.New("inmemdb: not found")
 )
 
-func NewDB(ctx context.Context) *DB {
+func NewDB() *DB {
 	return &DB{
-		ctx:  ctx,
 		data: make(map[string][]byte),
 		rw:   sync.RWMutex{},
 	}
@@ -24,7 +22,6 @@ func NewDB(ctx context.Context) *DB {
 type DB struct {
 	data map[string][]byte
 	rw   sync.RWMutex
-	ctx  context.Context
 }
 
 func (db *DB) Get(key []byte) ([]byte, error) {

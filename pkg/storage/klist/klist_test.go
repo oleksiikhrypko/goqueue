@@ -9,17 +9,15 @@ import (
 	"goqueue/pkg/storage/db/inmem"
 
 	"github.com/stretchr/testify/require"
-	"golang.org/x/net/context"
 )
 
 func Test_KList_general(t *testing.T) {
 	var err error
-	ctx := context.Background()
 
-	db := inmem.NewDB(ctx)
+	db := inmem.NewDB()
 
 	name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-	list := New(ctx, name, db)
+	list := New(name, db)
 
 	in := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"}
 
@@ -73,7 +71,7 @@ func Test_KList_general(t *testing.T) {
 }
 
 func TestKList_Add(t *testing.T) {
-	ctx := context.Background()
+	db := inmem.NewDB()
 
 	tests := []struct {
 		name      string
@@ -97,10 +95,9 @@ func TestKList_Add(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			db := inmem.NewDB(ctx)
 
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l := New(ctx, name, db)
+			l := New(name, db)
 
 			for _, v := range tt.in {
 				actions := batch.New(10)
@@ -140,7 +137,7 @@ func TestKList_Add(t *testing.T) {
 }
 
 func TestKList_Pop(t *testing.T) {
-	ctx := context.Background()
+	db := inmem.NewDB()
 
 	tests := []struct {
 		name   string
@@ -156,9 +153,8 @@ func TestKList_Pop(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			db := inmem.NewDB(ctx)
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l := New(ctx, name, db)
+			l := New(name, db)
 
 			for _, v := range tt.in {
 				actions := batch.New(10)
@@ -191,9 +187,7 @@ func TestKList_Pop(t *testing.T) {
 }
 
 func TestKList_Delete(t *testing.T) {
-	ctx := context.Background()
-
-	db := inmem.NewDB(ctx)
+	db := inmem.NewDB()
 
 	tests := []struct {
 		name      string
@@ -311,7 +305,7 @@ func TestKList_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l := New(ctx, name, db)
+			l := New(name, db)
 
 			for _, v := range tt.in {
 				actions := batch.New(10)
@@ -353,9 +347,7 @@ func TestKList_Delete(t *testing.T) {
 }
 
 func TestKList_SetToBegin(t *testing.T) {
-	ctx := context.Background()
-
-	db := inmem.NewDB(ctx)
+	db := inmem.NewDB()
 
 	tests := []struct {
 		name      string
@@ -473,7 +465,7 @@ func TestKList_SetToBegin(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l := New(ctx, name, db)
+			l := New(name, db)
 
 			for _, v := range tt.in {
 				actions := batch.New(10)
@@ -515,9 +507,7 @@ func TestKList_SetToBegin(t *testing.T) {
 }
 
 func TestKList_SetToEnd(t *testing.T) {
-	ctx := context.Background()
-
-	db := inmem.NewDB(ctx)
+	db := inmem.NewDB()
 
 	tests := []struct {
 		name      string
@@ -636,7 +626,7 @@ func TestKList_SetToEnd(t *testing.T) {
 			var err error
 
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l := New(ctx, name, db)
+			l := New(name, db)
 
 			for _, v := range tt.in {
 				actions := batch.New(10)
@@ -678,9 +668,7 @@ func TestKList_SetToEnd(t *testing.T) {
 }
 
 func TestKList_SetAfter(t *testing.T) {
-	ctx := context.Background()
-
-	db := inmem.NewDB(ctx)
+	db := inmem.NewDB()
 
 	tests := []struct {
 		name      string
@@ -853,7 +841,7 @@ func TestKList_SetAfter(t *testing.T) {
 			var err error
 
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l := New(ctx, name, db)
+			l := New(name, db)
 
 			for _, v := range tt.in {
 				actions := batch.New(10)
@@ -895,9 +883,7 @@ func TestKList_SetAfter(t *testing.T) {
 }
 
 func TestKList_SetBefore(t *testing.T) {
-	ctx := context.Background()
-
-	db := inmem.NewDB(ctx)
+	db := inmem.NewDB()
 
 	tests := []struct {
 		name      string
@@ -1069,7 +1055,7 @@ func TestKList_SetBefore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
 			name := fmt.Sprintf("q:%d:", time.Now().UnixMicro())
-			l := New(ctx, name, db)
+			l := New(name, db)
 
 			for _, v := range tt.in {
 				actions := batch.New(10)

@@ -2,13 +2,10 @@ package klist
 
 import (
 	"goqueue/pkg/storage/batch"
-
-	"golang.org/x/net/context"
 )
 
-func New(ctx context.Context, name string, db DB) *KList {
+func New(name string, db DB) *KList {
 	list := KList{
-		ctx:  ctx,
 		db:   db,
 		name: []byte(name),
 	}
@@ -16,7 +13,6 @@ func New(ctx context.Context, name string, db DB) *KList {
 }
 
 type KList struct {
-	ctx  context.Context
 	db   DB
 	name []byte
 }

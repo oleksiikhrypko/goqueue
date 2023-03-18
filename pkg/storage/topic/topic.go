@@ -1,12 +1,9 @@
 package topic
 
-import "goqueue/pkg/storage/batch"
-
 type DB interface {
 	Get(key []byte) ([]byte, error)
 	Has(key []byte) (bool, error)
 	IsNotFoundErr(err error) bool
-	Write(batch batch.List) error
 }
 
 type Topic struct {

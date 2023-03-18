@@ -1,9 +1,6 @@
 package storage
 
 import (
-	"log"
-
-	"github.com/syndtr/goleveldb/leveldb"
 	"golang.org/x/net/context"
 )
 
@@ -11,11 +8,7 @@ type Config struct {
 	Path string
 }
 
-func New(ctx context.Context, conf Config) (*Storage, error) {
-	db, err := leveldb.OpenFile(conf.Path, nil)
-	if err != nil {
-		log.Println("init lvl failed", err)
-	}
+func New(ctx context.Context, conf Config, db DB) (*Storage, error) {
 	st := &Storage{
 		ctx: ctx,
 		db:  db,
@@ -25,11 +18,7 @@ func New(ctx context.Context, conf Config) (*Storage, error) {
 
 type Storage struct {
 	ctx context.Context
-	db  *leveldb.DB
-}
-
-func (s Storage) Close() error {
-	return s.db.Close()
+	db  DB
 }
 
 func (s Storage) Push(topic, sequenceKey, msgID string, payload []byte) error {
