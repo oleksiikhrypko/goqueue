@@ -9,6 +9,7 @@ import (
 
 func buildItemKey(name, item []byte) []byte {
 	var s strings.Builder
+	s.Grow(len(name) + len(item) + 2)
 	s.Write(name)
 	s.WriteString(":")
 	s.Write(item)
@@ -18,6 +19,7 @@ func buildItemKey(name, item []byte) []byte {
 
 func buildStateKey(name []byte) []byte {
 	s := strings.Builder{}
+	s.Grow(len(name))
 	s.Write(name)
 	s.WriteString(":state")
 	return []byte(s.String())
