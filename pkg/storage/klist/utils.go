@@ -4,24 +4,31 @@ import (
 	"bytes"
 	"strings"
 
-	models "goqueue/pkg/proto/klist"
+	models "goqueue/pkg/proto/models"
 )
 
 func buildItemKey(name, item []byte) []byte {
+	const (
+		pfx = "qi:"
+		sep = ">"
+	)
 	var s strings.Builder
-	s.Grow(len(name) + len(item) + 2)
+	s.Grow(len(pfx) + len(name) + len(sep) + len(item))
+	s.WriteString(pfx)
 	s.Write(name)
-	s.WriteString(":")
+	s.WriteString(sep)
 	s.Write(item)
-	s.WriteString(":")
 	return []byte(s.String())
 }
 
 func buildStateKey(name []byte) []byte {
+	const (
+		pfx = "q:"
+	)
 	s := strings.Builder{}
-	s.Grow(len(name))
+	s.Grow(len(pfx) + len(name))
+	s.WriteString(pfx)
 	s.Write(name)
-	s.WriteString(":state")
 	return []byte(s.String())
 }
 
@@ -29,14 +36,14 @@ func isEqual(item1, item2 []byte) bool {
 	return bytes.Compare(item1, item2) == 0
 }
 
-func isItemFirst(state *models.State, item []byte) bool {
+func isItemFirst(state *models.KList, item []byte) bool {
 	return isEqual(state.GetFirstItem(), item)
 }
 
-func isItemLast(state *models.State, item []byte) bool {
+func isItemLast(state *models.KList, item []byte) bool {
 	return isEqual(state.GetLastItem(), item)
 }
 
-func isEmpty(state *models.State) bool {
+func isEmpty(state *models.KList) bool {
 	return state.Count == 0
 }

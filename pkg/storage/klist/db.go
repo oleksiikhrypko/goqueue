@@ -1,6 +1,8 @@
 package klist
 
 import (
+	"goqueue/pkg/storage/db"
+
 	"github.com/pkg/errors"
 )
 
@@ -11,17 +13,7 @@ type DB interface {
 }
 
 func (l *KList) readValue(key []byte) ([]byte, error) {
-	value, err := l.db.Get(key)
-	if err != nil {
-		if l.db.IsNotFoundErr(err) {
-			return nil, ErrNotFound
-		}
-		return nil, errors.Wrap(err, "failed to read data")
-	}
-	if len(value) == 0 {
-		return nil, nil
-	}
-	return value, nil
+	return db.ReadValue(l.db, key)
 }
 
 func (l *KList) hasKey(key []byte) (bool, error) {
