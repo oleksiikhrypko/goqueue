@@ -4,13 +4,14 @@ import (
 	"strings"
 )
 
-func buildStateKey(name []byte) []byte {
+func buildStateKey(topic, name string) []byte {
 	const (
 		pfx = "g:"
+		sep = ":>"
 	)
 	s := strings.Builder{}
-	s.Grow(len(pfx) + len(name))
+	s.Grow(len(pfx) + len(topic) + len(sep) + len(name))
 	s.WriteString(pfx)
-	s.Write(name)
+	s.WriteString(name)
 	return []byte(s.String())
 }

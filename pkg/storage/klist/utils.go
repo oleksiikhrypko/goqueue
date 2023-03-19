@@ -10,7 +10,7 @@ import (
 func buildItemKey(name, item []byte) []byte {
 	const (
 		pfx = "qi:"
-		sep = ">"
+		sep = ":>"
 	)
 	var s strings.Builder
 	s.Grow(len(pfx) + len(name) + len(sep) + len(item))

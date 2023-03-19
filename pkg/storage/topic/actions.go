@@ -29,19 +29,19 @@ func (t *Topic) saveState(actions batch.List, state *models.Topic) error {
 	return nil
 }
 
-func (t *Topic) AddMessage(actions batch.List, key []byte, item []byte) error {
-	// add key to source list
-	kl := klist.New(string(buildKey(t.name)), t.db)
-	err := kl.Add(actions, key)
+func (t *Topic) AddItem(actions batch.List, subKey, item []byte) error {
+	// add key to topic list
+	kl := klist.New(t.name, t.db)
+	err := kl.Add(actions, subKey)
 	if err != nil {
-		return errors.Wrap(err, "failed to add message to source list")
+		return errors.Wrap(err, "failed to add sub key to topic list")
 	}
 
 	// add item to sequence list
-	il := klist.New(string(buildSequenceListName(t.name, key)), t.db)
+	il := klist.New(string(BuildSubListName(t.name, subKey)), t.db)
 	err = il.Add(actions, item)
 	if err != nil {
-		return errors.Wrap(err, "failed to add message to sequence list")
+		return errors.Wrap(err, "failed to add message to sub list")
 	}
 
 	return nil

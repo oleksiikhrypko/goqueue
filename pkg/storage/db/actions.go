@@ -30,7 +30,7 @@ func ReadStruct(db Reader, key []byte, dest proto.Message) error {
 		if err == ErrNotFound {
 			return nil
 		}
-		return errors.Wrap(err, "failed to read state")
+		return errors.Wrap(err, "failed to read record")
 	}
 	if v == nil {
 		return nil
@@ -38,7 +38,7 @@ func ReadStruct(db Reader, key []byte, dest proto.Message) error {
 
 	err = proto.Unmarshal(v, dest)
 	if err != nil {
-		return errors.Wrap(err, "failed to unmarshal state")
+		return errors.Wrap(err, "failed to unmarshal record")
 	}
 	return nil
 }

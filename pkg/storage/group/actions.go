@@ -9,11 +9,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+func Exists(db db.DB, topic, name string) (bool, error) {
+	return db.Has(buildStateKey(topic, name))
+}
+
 func (g *Group) loadState() (*models.Group, error) {
 	var state models.Group
-	err := db.ReadStruct(g.db, buildStateKey(g.name), &state)
+	err := db.ReadStruct(g.db, buildStateKey(g.topic, g.name), &state)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to read group state")
 	}
 
 	return &state, nil
@@ -24,6 +28,6 @@ func (g *Group) saveState(actions batch.List, state *models.Group) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to build state data model")
 	}
-	actions.Put(buildStateKey(g.name), v)
+	actions.Put(buildStateKey(g.topic, g.name), v)
 	return nil
 }

@@ -4,27 +4,27 @@ import (
 	"strings"
 )
 
-func buildKey(name []byte) []byte {
+func buildKey(name string) []byte {
 	const (
 		pfx = "t:"
 	)
 	s := strings.Builder{}
 	s.Grow(len(pfx) + len(name))
 	s.WriteString(pfx)
-	s.Write(name)
+	s.WriteString(name)
 	return []byte(s.String())
 }
 
-func buildSequenceListName(topic, key []byte) []byte {
+func BuildSubListName(topic string, subKey []byte) []byte {
 	const (
 		pfx = "t:"
 		sep = ":>"
 	)
 	s := strings.Builder{}
-	s.Grow(len(pfx) + len(topic) + len(sep) + len(key))
+	s.Grow(len(pfx) + len(topic) + len(sep) + len(subKey))
 	s.WriteString(pfx)
-	s.Write(topic)
+	s.WriteString(topic)
 	s.WriteString(sep)
-	s.Write(key)
+	s.Write(subKey)
 	return []byte(s.String())
 }

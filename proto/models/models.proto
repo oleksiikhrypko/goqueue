@@ -16,7 +16,7 @@ message Item {
 }
 
 message Group {
-  bytes p_src = 1;
+  bytes lastTopicKey = 1;
 }
 
 message Topic {

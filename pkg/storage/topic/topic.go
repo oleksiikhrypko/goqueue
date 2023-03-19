@@ -8,10 +8,10 @@ type DB interface {
 
 type Topic struct {
 	db   DB
-	name []byte
+	name string
 }
 
-func New(db DB, name []byte) *Topic {
+func New(db DB, name string) *Topic {
 	return &Topic{
 		db:   db,
 		name: name,
