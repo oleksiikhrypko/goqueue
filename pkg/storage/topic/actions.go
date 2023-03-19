@@ -53,6 +53,12 @@ func (t *Topic) AddGroup(actions batch.List, group string) error {
 		return err
 	}
 
+	for _, g := range state.Groups {
+		if g == group {
+			return nil
+		}
+	}
+
 	state.Groups = append(state.Groups, group)
 
 	return t.saveState(actions, state)
