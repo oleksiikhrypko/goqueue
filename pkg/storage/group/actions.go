@@ -9,10 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func Exists(db db.DB, topic, name string) (bool, error) {
-	return db.Has(buildStateKey(topic, name))
-}
-
 func (g *Group) loadState() (*models.Group, error) {
 	var state models.Group
 	err := db.ReadStruct(g.db, buildStateKey(g.topic, g.name), &state)

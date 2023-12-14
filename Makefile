@@ -7,7 +7,7 @@ GO_BUILD_COMMIT := $(or $(GO_BUILD_COMMIT), $(shell git rev-parse HEAD))
 GO_BUILD_TIME := $(or $(GO_BUILD_TIME), $(shell date '+%m-%d-%YT%H:%M:%S'))
 GOOS := $(or $(GOOS), '')
 
-PROTO_FILES += $(shell find proto -name "*.proto" -not -path '*google*' | sort -u)
+PROTO_FILES += $(shell find api -name "*.proto" -not -path '*google*' | sort -u)
 
 .PHONY: test
 test:
@@ -50,12 +50,13 @@ docs:
 
 .PHONY: tools
 tools:
-	go install \
-        github.com/golangci/golangci-lint/cmd/golangci-lint \
-        github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc \
-        google.golang.org/grpc \
-        google.golang.org/grpc/cmd/protoc-gen-go-grpc \
-        google.golang.org/protobuf/cmd/protoc-gen-go
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2
+	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.4
+	go install github.com/vektra/mockery/v2@v2.29.0
+	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.15.2
+	go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@v1.5.1
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+	go install google.golang.org/protobuf/cmd/protoc-gen-go
 
 .PHONY: gen
 gen:

@@ -1,5 +1,7 @@
 package group
 
+import "goqueue/pkg/storage/db"
+
 type DB interface {
 	Get(key []byte) ([]byte, error)
 	Has(key []byte) (bool, error)
@@ -18,4 +20,8 @@ func New(db DB, topic, name string) *Group {
 		topic: topic,
 		name:  name,
 	}
+}
+
+func Exists(db db.DB, topic, name string) (bool, error) {
+	return db.Has(buildStateKey(topic, name))
 }
