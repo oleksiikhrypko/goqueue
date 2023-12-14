@@ -1,8 +1,12 @@
 package db
 
-import "errors"
+import (
+	"errors"
+
+	"goqueue/pkg/xerrors"
+)
 
 var (
-	ErrCritical = errors.New("critical db error")
-	ErrNotFound = errors.New("not found")
+	ErrCritical = xerrors.New(errors.New("critical error"))
+	ErrNotFound = xerrors.New(errors.New("not found"))
 )

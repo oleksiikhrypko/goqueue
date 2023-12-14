@@ -1,8 +1,9 @@
 package db
 
 import (
+	"errors"
+
 	"github.com/golang/protobuf/proto"
-	"github.com/pkg/errors"
 )
 
 type Reader interface {
@@ -16,7 +17,7 @@ func ReadValue(db Reader, key []byte) ([]byte, error) {
 		if db.IsNotFoundErr(err) {
 			return nil, ErrNotFound
 		}
-		return nil, errors.Wrap(err, "failed to read data")
+		return nil, ErrCritical.Consume(err)
 	}
 	if len(value) == 0 {
 		return nil, nil
@@ -27,10 +28,10 @@ func ReadValue(db Reader, key []byte) ([]byte, error) {
 func ReadStruct(db Reader, key []byte, dest proto.Message) error {
 	v, err := ReadValue(db, key)
 	if err != nil {
-		if err == ErrNotFound {
+		if errors.Is(err, ErrNotFound) {
 			return nil
 		}
-		return errors.Wrap(err, "failed to read record")
+		return ErrCritical.Consume(err)
 	}
 	if v == nil {
 		return nil
@@ -38,7 +39,7 @@ func ReadStruct(db Reader, key []byte, dest proto.Message) error {
 
 	err = proto.Unmarshal(v, dest)
 	if err != nil {
-		return errors.Wrap(err, "failed to unmarshal record")
+		return ErrCritical.Consume(err)
 	}
 	return nil
 }

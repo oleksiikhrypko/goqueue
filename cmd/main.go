@@ -8,6 +8,7 @@ import (
 	"time"
 
 	storage "goqueue/pkg/storage"
+	"goqueue/pkg/storage/batch"
 	listdb "goqueue/pkg/storage/db/leveldb"
 	klist "goqueue/pkg/storage/klist"
 
@@ -64,6 +65,7 @@ func main() {
 }
 
 func addItemsToList(wg *sync.WaitGroup, list storage.List, len int) {
+	b := batch.List()
 	for i := 0; i < len; i++ {
 		err := list.Add([]byte(fmt.Sprintf("key" + strconv.Itoa(i))))
 		if err != nil {
