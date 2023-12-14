@@ -1,10 +1,10 @@
 package batch
 
-type BatchActionType int
+type ActionType int
 
 const (
-	BatchActionTypeDel = BatchActionType(0)
-	BatchActionTypePut = BatchActionType(1)
+	ActionTypeDel = ActionType(0)
+	ActionTypePut = ActionType(1)
 )
 
 func New(cap int) *Batch {
@@ -12,34 +12,34 @@ func New(cap int) *Batch {
 		cap = 2
 	}
 	return &Batch{
-		acts:   make([]BatchActionType, 0, cap),
+		acts:   make([]ActionType, 0, cap),
 		keys:   make([][]byte, 0, cap),
 		values: make([][]byte, 0, cap),
 	}
 }
 
 type Batch struct {
-	acts   []BatchActionType
+	acts   []ActionType
 	keys   [][]byte
 	values [][]byte
 }
 
-func (b *Batch) ForEach(h func(action BatchActionType, key, value []byte)) {
+func (b *Batch) ForEach(h func(action ActionType, key, value []byte)) {
 	for i := range b.acts {
 		h(b.acts[i], b.keys[i], b.values[i])
 	}
 }
 
-func (b *Batch) appendRec(action BatchActionType, key, value []byte) {
+func (b *Batch) appendRec(action ActionType, key, value []byte) {
 	b.acts = append(b.acts, action)
 	b.keys = append(b.keys, key)
 	b.values = append(b.values, value)
 }
 
-func (b *Batch) Put(key, value []byte) {
-	b.appendRec(BatchActionTypePut, key, value)
+func (b *Batch) AppendPut(key, value []byte) {
+	b.appendRec(ActionTypePut, key, value)
 }
 
-func (b *Batch) Delete(key []byte) {
-	b.appendRec(BatchActionTypeDel, key, nil)
+func (b *Batch) AppendDelete(key []byte) {
+	b.appendRec(ActionTypeDel, key, nil)
 }

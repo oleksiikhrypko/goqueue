@@ -371,7 +371,7 @@ func (l *KList) pop(actions batch.List, state *models.KList) ([]byte, error) {
 	}
 
 	// delete
-	actions.Delete(buildItemKey(l.name, first.Id))
+	actions.AppendDelete(buildItemKey(l.name, first.Id))
 
 	return first.Id, nil
 }
@@ -408,7 +408,7 @@ func (l *KList) delete(actions batch.List, state *models.KList, item []byte) err
 	}
 
 	// delete
-	actions.Delete(buildItemKey(l.name, rec.Id))
+	actions.AppendDelete(buildItemKey(l.name, rec.Id))
 
 	return nil
 }
@@ -418,7 +418,7 @@ func (l *KList) saveState(actions batch.List, state *models.KList) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to build state data model")
 	}
-	actions.Put(buildStateKey(l.name), v)
+	actions.AppendPut(buildStateKey(l.name), v)
 	return nil
 }
 
@@ -430,7 +430,7 @@ func (l *KList) saveRecord(actions batch.List, rec *Record) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to build state data model")
 	}
-	actions.Put(buildItemKey(l.name, rec.Id), v)
+	actions.AppendPut(buildItemKey(l.name, rec.Id), v)
 	return nil
 }
 

@@ -58,7 +58,7 @@ func (db *DB) Has(key []byte) (bool, error) {
 func (db *DB) Write(batch batchapi.List) error {
 	db.rw.Lock()
 	defer db.rw.Unlock()
-	batch.ForEach(func(action batchapi.BatchActionType, key, value []byte) {
+	batch.ForEach(func(action batchapi.ActionType, key, value []byte) {
 		db.data[string(key)] = value
 	})
 	return nil

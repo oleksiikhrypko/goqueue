@@ -24,6 +24,6 @@ func (g *Group) saveState(actions batch.List, state *models.Group) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to build state data model")
 	}
-	actions.Put(buildStateKey(g.topic, g.name), v)
+	actions.AppendPut(buildStateKey(g.topic, g.name), v)
 	return nil
 }

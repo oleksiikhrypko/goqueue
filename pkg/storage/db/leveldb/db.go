@@ -45,11 +45,11 @@ func (db *DB) IsNotFoundErr(err error) bool {
 
 func fromAPIBatch(in batch.List) *leveldb.Batch {
 	out := leveldb.Batch{}
-	in.ForEach(func(action batch.BatchActionType, key, value []byte) {
+	in.ForEach(func(action batch.ActionType, key, value []byte) {
 		switch action {
-		case batch.BatchActionTypePut:
+		case batch.ActionTypePut:
 			out.Put(key, value)
-		case batch.BatchActionTypeDel:
+		case batch.ActionTypeDel:
 			out.Delete(key)
 		}
 	})

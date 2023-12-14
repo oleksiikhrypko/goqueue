@@ -1,7 +1,7 @@
 package batch
 
 type List interface {
-	ForEach(h func(action BatchActionType, key, value []byte))
-	Put(key, value []byte)
-	Delete(key []byte)
+	ForEach(h func(action ActionType, key, value []byte))
+	AppendPut(key, value []byte)
+	AppendDelete(key []byte)
 }
