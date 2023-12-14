@@ -4,13 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"golang.org/x/net/context"
 )
 
 func Test_CRUD(t *testing.T) {
-	ctx := context.Background()
-
-	db := NewDB(ctx)
+	db := NewDB()
 	key := []byte("key1")
 
 	v, err := db.Get(key)
