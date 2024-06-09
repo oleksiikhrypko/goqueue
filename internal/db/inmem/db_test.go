@@ -12,5 +12,6 @@ func Test_CRUD(t *testing.T) {
 
 	v, err := db.Get(key)
 	require.ErrorIs(t, err, ErrNotFound)
+	require.True(t, db.IsNotFoundErr(err))
 	require.Empty(t, v)
 }

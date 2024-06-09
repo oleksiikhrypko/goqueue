@@ -1,6 +1,6 @@
 package group
 
-import "goqueue/pkg/storage/db"
+import "goqueue/internal/db"
 
 type DB interface {
 	Get(key []byte) ([]byte, error)

@@ -1,12 +1,12 @@
 package group
 
 import (
+	"goqueue/internal/batch"
+	"goqueue/internal/db"
 	"goqueue/pkg/proto/models"
-	"goqueue/pkg/storage/batch"
-	"goqueue/pkg/storage/db"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 )
 
 func (g *Group) loadState() (*models.Group, error) {

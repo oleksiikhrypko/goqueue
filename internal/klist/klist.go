@@ -1,7 +1,7 @@
 package klist
 
 import (
-	"goqueue/pkg/storage/batch"
+	"goqueue/internal/batch"
 )
 
 func New(name string, db DB) *KList {

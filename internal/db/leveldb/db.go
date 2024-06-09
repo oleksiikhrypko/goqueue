@@ -1,8 +1,9 @@
 package leveldb
 
 import (
-	"goqueue/pkg/storage/batch"
+	"goqueue/internal/batch"
 
+	"github.com/pkg/errors"
 	"github.com/syndtr/goleveldb/leveldb"
 	"golang.org/x/net/context"
 )
@@ -40,7 +41,7 @@ func (db *DB) Write(batch batch.List) error {
 }
 
 func (db *DB) IsNotFoundErr(err error) bool {
-	return err == leveldb.ErrNotFound
+	return errors.Is(err, leveldb.ErrNotFound)
 }
 
 func fromAPIBatch(in batch.List) *leveldb.Batch {

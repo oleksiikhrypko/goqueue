@@ -3,7 +3,7 @@ package inmem
 import (
 	"sync"
 
-	batchapi "goqueue/pkg/storage/batch"
+	batchapi "goqueue/internal/batch"
 
 	"github.com/pkg/errors"
 )
@@ -65,5 +65,5 @@ func (db *DB) Write(batch batchapi.List) error {
 }
 
 func (db *DB) IsNotFoundErr(err error) bool {
-	return err == ErrNotFound
+	return errors.Is(err, ErrNotFound)
 }

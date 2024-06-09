@@ -3,12 +3,12 @@ package klist
 import (
 	"fmt"
 
+	"goqueue/internal/batch"
+	"goqueue/internal/db"
 	models "goqueue/pkg/proto/models"
-	"goqueue/pkg/storage/batch"
-	"goqueue/pkg/storage/db"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 )
 
 func (l *KList) readRecord(item []byte) (*Record, error) {

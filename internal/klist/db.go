@@ -1,7 +1,7 @@
 package klist
 
 import (
-	"goqueue/pkg/storage/db"
+	"goqueue/internal/db"
 
 	"github.com/pkg/errors"
 )

@@ -35,10 +35,8 @@ func (s Storage) Commit(msgID string) error {
 
 func (s Storage) Rollback(msgID string) error {
 	return nil
-
 }
 
 func (s Storage) Touch(msgID string, visibilityTimeoutSec int) error {
 	return nil
-
 }

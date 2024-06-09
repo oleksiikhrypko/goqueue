@@ -1,6 +1,6 @@
 package storage
 
-import "goqueue/pkg/storage/batch"
+import "goqueue/internal/batch"
 
 type Message struct {
 	ID      string

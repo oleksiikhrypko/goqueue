@@ -8,6 +8,7 @@ import (
 )
 
 func Test_Consume(t *testing.T) {
+	t.Parallel()
 	t.Run("error", func(t *testing.T) {
 		someErr := errors.New("some error")
 		baseErr := New("base message").Consume(someErr).WithAdditionalInfo("test", map[string]any{"field": "value", "field2": "base_err_value2"})

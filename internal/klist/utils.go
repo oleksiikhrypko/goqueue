@@ -33,7 +33,7 @@ func buildStateKey(name []byte) []byte {
 }
 
 func isEqual(item1, item2 []byte) bool {
-	return bytes.Compare(item1, item2) == 0
+	return bytes.Equal(item1, item2)
 }
 
 func isItemFirst(state *models.KList, item []byte) bool {

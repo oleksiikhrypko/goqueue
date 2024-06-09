@@ -23,6 +23,7 @@ func Test_CRUD(t *testing.T) {
 
 	v, err := db.Get(key)
 	require.Equal(t, err, leveldb.ErrNotFound)
+	require.True(t, db.IsNotFoundErr(err))
 	require.Empty(t, v)
 
 	// TODO: add more...

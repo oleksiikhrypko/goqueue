@@ -1,8 +1,8 @@
 package topic
 
 import (
-	"goqueue/pkg/storage/batch"
-	"goqueue/pkg/storage/klist"
+	"goqueue/internal/batch"
+	"goqueue/internal/klist"
 
 	"github.com/pkg/errors"
 )

@@ -1,6 +1,6 @@
 module goqueue
 
-go 1.18
+go 1.21.5
 
 require (
 	github.com/golang/protobuf v1.5.3

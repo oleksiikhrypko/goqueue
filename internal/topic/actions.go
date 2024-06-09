@@ -1,9 +1,9 @@
 package topic
 
 import (
+	"goqueue/internal/batch"
+	"goqueue/internal/db"
 	"goqueue/pkg/proto/models"
-	"goqueue/pkg/storage/batch"
-	"goqueue/pkg/storage/db"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"goqueue/pkg/storage/batch"
-	"goqueue/pkg/storage/db/inmem"
+	"goqueue/internal/batch"
+	"goqueue/internal/db/inmem"
 
 	"github.com/stretchr/testify/require"
 )

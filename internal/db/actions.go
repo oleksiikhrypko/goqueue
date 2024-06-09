@@ -3,7 +3,7 @@ package db
 import (
 	"errors"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type Reader interface {
