@@ -19,11 +19,11 @@ func (g *Group) loadState() (*models.Group, error) {
 	return &state, nil
 }
 
-func (g *Group) saveState(actions batch.List, state *models.Group) error {
+func (g *Group) saveState(actions batch.ActionsList, state *models.Group) error {
 	v, err := proto.Marshal(state)
 	if err != nil {
 		return errors.Wrap(err, "failed to build state data model")
 	}
-	actions.AppendPut(buildStateKey(g.topic, g.name), v)
+	actions.AddActionSet(buildStateKey(g.topic, g.name), v)
 	return nil
 }

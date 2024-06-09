@@ -38,7 +38,7 @@ func (l *KList) loadState() (*models.KList, error) {
 	return &state, nil
 }
 
-func (l *KList) writeRootItem(actions batch.List, state *models.KList, item []byte) error {
+func (l *KList) writeRootItem(actions batch.ActionsList, state *models.KList, item []byte) error {
 	if !isEmpty(state) {
 		return errors.New("failed on call 'writeRootItem': list is not empty")
 	}
@@ -63,7 +63,7 @@ func (l *KList) writeRootItem(actions batch.List, state *models.KList, item []by
 	return nil
 }
 
-func (l *KList) add(actions batch.List, state *models.KList, item []byte) (err error) {
+func (l *KList) add(actions batch.ActionsList, state *models.KList, item []byte) (err error) {
 	if isEmpty(state) {
 		return l.writeRootItem(actions, state, item)
 	}
@@ -100,7 +100,7 @@ func (l *KList) add(actions batch.List, state *models.KList, item []byte) (err e
 	return nil
 }
 
-func (l *KList) setToBegin(actions batch.List, state *models.KList, item []byte) (err error) {
+func (l *KList) setToBegin(actions batch.ActionsList, state *models.KList, item []byte) (err error) {
 	if isEmpty(state) {
 		return l.writeRootItem(actions, state, item)
 	}
@@ -157,7 +157,7 @@ func (l *KList) setToBegin(actions batch.List, state *models.KList, item []byte)
 	return nil
 }
 
-func (l *KList) setToEnd(actions batch.List, state *models.KList, item []byte) error {
+func (l *KList) setToEnd(actions batch.ActionsList, state *models.KList, item []byte) error {
 	if isEmpty(state) {
 		return l.writeRootItem(actions, state, item)
 	}
@@ -214,7 +214,7 @@ func (l *KList) setToEnd(actions batch.List, state *models.KList, item []byte) e
 	return nil
 }
 
-func (l *KList) setAfter(actions batch.List, state *models.KList, item, root []byte) error {
+func (l *KList) setAfter(actions batch.ActionsList, state *models.KList, item, root []byte) error {
 	if isEqual(item, root) {
 		return errors.New("input items are equals")
 	}
@@ -280,7 +280,7 @@ func (l *KList) setAfter(actions batch.List, state *models.KList, item, root []b
 	return nil
 }
 
-func (l *KList) setBefore(actions batch.List, state *models.KList, item, root []byte) error {
+func (l *KList) setBefore(actions batch.ActionsList, state *models.KList, item, root []byte) error {
 	if isEqual(item, root) {
 		return errors.New("input items are equals")
 	}
@@ -345,7 +345,7 @@ func (l *KList) setBefore(actions batch.List, state *models.KList, item, root []
 	return nil
 }
 
-func (l *KList) pop(actions batch.List, state *models.KList) ([]byte, error) {
+func (l *KList) pop(actions batch.ActionsList, state *models.KList) ([]byte, error) {
 	if isEmpty(state) {
 		return nil, nil
 	}
@@ -371,12 +371,12 @@ func (l *KList) pop(actions batch.List, state *models.KList) ([]byte, error) {
 	}
 
 	// delete
-	actions.AppendDelete(buildItemKey(l.name, first.Id))
+	actions.AddActionDel(buildItemKey(l.name, first.Id))
 
 	return first.Id, nil
 }
 
-func (l *KList) delete(actions batch.List, state *models.KList, item []byte) error {
+func (l *KList) delete(actions batch.ActionsList, state *models.KList, item []byte) error {
 	exists, err := l.isItemExists(item)
 	if err != nil {
 		return err
@@ -408,21 +408,21 @@ func (l *KList) delete(actions batch.List, state *models.KList, item []byte) err
 	}
 
 	// delete
-	actions.AppendDelete(buildItemKey(l.name, rec.Id))
+	actions.AddActionDel(buildItemKey(l.name, rec.Id))
 
 	return nil
 }
 
-func (l *KList) saveState(actions batch.List, state *models.KList) error {
+func (l *KList) saveState(actions batch.ActionsList, state *models.KList) error {
 	v, err := proto.Marshal(state)
 	if err != nil {
 		return errors.Wrap(err, "failed to build state data model")
 	}
-	actions.AppendPut(buildStateKey(l.name), v)
+	actions.AddActionSet(buildStateKey(l.name), v)
 	return nil
 }
 
-func (l *KList) saveRecord(actions batch.List, rec *Record) error {
+func (l *KList) saveRecord(actions batch.ActionsList, rec *Record) error {
 	v, err := proto.Marshal(&models.Item{
 		Next: rec.Next,
 		Prev: rec.Prev,
@@ -430,11 +430,11 @@ func (l *KList) saveRecord(actions batch.List, rec *Record) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to build state data model")
 	}
-	actions.AppendPut(buildItemKey(l.name, rec.Id), v)
+	actions.AddActionSet(buildItemKey(l.name, rec.Id), v)
 	return nil
 }
 
-func (l *KList) cutRecord(actions batch.List, rec *Record) error {
+func (l *KList) cutRecord(actions batch.ActionsList, rec *Record) error {
 	// update prev if exists
 	if rec.Prev != nil {
 		prev, err := l.readRecord(rec.Prev)
@@ -461,7 +461,7 @@ func (l *KList) cutRecord(actions batch.List, rec *Record) error {
 	return nil
 }
 
-func (l *KList) insertAfterRecord(actions batch.List, rec *Record, root *Record) error {
+func (l *KList) insertAfterRecord(actions batch.ActionsList, rec *Record, root *Record) error {
 	// in case if it's sequence rec <- root
 	if isEqual(rec.Id, root.Prev) {
 		root.Prev = rec.Prev
@@ -504,7 +504,7 @@ func (l *KList) insertAfterRecord(actions batch.List, rec *Record, root *Record)
 	return nil
 }
 
-func (l *KList) insertBeforeRecord(actions batch.List, rec *Record, root *Record) error {
+func (l *KList) insertBeforeRecord(actions batch.ActionsList, rec *Record, root *Record) error {
 	// in case if it's sequence root -> rec
 	if isEqual(rec.Id, root.Next) {
 		root.Next = rec.Next

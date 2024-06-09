@@ -17,7 +17,7 @@ type KList struct {
 	name []byte
 }
 
-func (l *KList) Add(actions batch.List, item []byte) error {
+func (l *KList) Add(actions batch.ActionsList, item []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func (l *KList) Add(actions batch.List, item []byte) error {
 	return l.add(actions, state, item)
 }
 
-func (l *KList) SetToBegin(actions batch.List, item []byte) error {
+func (l *KList) SetToBegin(actions batch.ActionsList, item []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func (l *KList) SetToBegin(actions batch.List, item []byte) error {
 	return l.setToBegin(actions, state, item)
 }
 
-func (l *KList) SetToEnd(actions batch.List, item []byte) error {
+func (l *KList) SetToEnd(actions batch.ActionsList, item []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
@@ -44,7 +44,7 @@ func (l *KList) SetToEnd(actions batch.List, item []byte) error {
 	return l.setToEnd(actions, state, item)
 }
 
-func (l *KList) SetAfter(actions batch.List, item, root []byte) error {
+func (l *KList) SetAfter(actions batch.ActionsList, item, root []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func (l *KList) SetAfter(actions batch.List, item, root []byte) error {
 	return l.setAfter(actions, state, item, root)
 }
 
-func (l *KList) SetBefore(actions batch.List, item, root []byte) error {
+func (l *KList) SetBefore(actions batch.ActionsList, item, root []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (l *KList) SetBefore(actions batch.List, item, root []byte) error {
 	return l.setBefore(actions, state, item, root)
 }
 
-func (l *KList) Pop(actions batch.List) ([]byte, error) {
+func (l *KList) Pop(actions batch.ActionsList) ([]byte, error) {
 	state, err := l.loadState()
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (l *KList) Pop(actions batch.List) ([]byte, error) {
 	return l.pop(actions, state)
 }
 
-func (l *KList) Delete(actions batch.List, item []byte) error {
+func (l *KList) Delete(actions batch.ActionsList, item []byte) error {
 	state, err := l.loadState()
 	if err != nil {
 		return err

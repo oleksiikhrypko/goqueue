@@ -19,11 +19,11 @@ func (t *Topic) loadState() (*models.Topic, error) {
 	return &state, nil
 }
 
-func (t *Topic) saveState(actions batch.List, state *models.Topic) error {
+func (t *Topic) saveState(actions batch.ActionsList, state *models.Topic) error {
 	v, err := proto.Marshal(state)
 	if err != nil {
 		return errors.Wrap(err, "failed to build state data model")
 	}
-	actions.AppendPut(buildKey(t.name), v)
+	actions.AddActionSet(buildKey(t.name), v)
 	return nil
 }

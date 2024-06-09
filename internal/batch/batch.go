@@ -4,7 +4,7 @@ type ActionType int
 
 const (
 	ActionTypeDel = ActionType(0)
-	ActionTypePut = ActionType(1)
+	ActionTypeSet = ActionType(1)
 )
 
 func New(cap int) *Batch {
@@ -36,10 +36,14 @@ func (b *Batch) appendRec(action ActionType, key, value []byte) {
 	b.values = append(b.values, value)
 }
 
-func (b *Batch) AppendPut(key, value []byte) {
-	b.appendRec(ActionTypePut, key, value)
+func (b *Batch) AddAction(action ActionType, key, value []byte) {
+	b.appendRec(action, key, value)
 }
 
-func (b *Batch) AppendDelete(key []byte) {
+func (b *Batch) AddActionSet(key, value []byte) {
+	b.appendRec(ActionTypeSet, key, value)
+}
+
+func (b *Batch) AddActionDel(key []byte) {
 	b.appendRec(ActionTypeDel, key, nil)
 }

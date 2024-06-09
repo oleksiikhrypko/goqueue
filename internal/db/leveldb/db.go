@@ -36,19 +36,19 @@ func (db *DB) Has(key []byte) (bool, error) {
 	return db.lvl.Has(key, nil)
 }
 
-func (db *DB) Write(batch batch.List) error {
-	return db.lvl.Write(fromAPIBatch(batch), nil)
+func (db *DB) Write(batch batch.ActionsList) error {
+	return db.lvl.Write(toAPIBatch(batch), nil)
 }
 
 func (db *DB) IsNotFoundErr(err error) bool {
 	return errors.Is(err, leveldb.ErrNotFound)
 }
 
-func fromAPIBatch(in batch.List) *leveldb.Batch {
+func toAPIBatch(in batch.ActionsList) *leveldb.Batch {
 	out := leveldb.Batch{}
 	in.ForEach(func(action batch.ActionType, key, value []byte) {
 		switch action {
-		case batch.ActionTypePut:
+		case batch.ActionTypeSet:
 			out.Put(key, value)
 		case batch.ActionTypeDel:
 			out.Delete(key)

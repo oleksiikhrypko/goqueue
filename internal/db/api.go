@@ -7,6 +7,6 @@ type DB interface {
 	Put(key, value []byte) error
 	Delete(key []byte) error
 	Has(key []byte) (bool, error)
-	Write(batch batch.List) error
+	Write(batch batch.ActionsList) error
 	IsNotFoundErr(err error) bool
 }

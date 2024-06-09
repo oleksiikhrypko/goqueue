@@ -25,7 +25,7 @@ func New(db DB, name string) *Topic {
 	}
 }
 
-func (t *Topic) AddItem(actions batch.List, subKey, item []byte) error {
+func (t *Topic) AddItem(actions batch.ActionsList, subKey, item []byte) error {
 	// add key to topic list
 	kl := klist.New(t.name, t.db)
 	err := kl.Add(actions, subKey)
@@ -43,7 +43,7 @@ func (t *Topic) AddItem(actions batch.List, subKey, item []byte) error {
 	return nil
 }
 
-func (t *Topic) AddGroup(actions batch.List, group string) error {
+func (t *Topic) AddGroup(actions batch.ActionsList, group string) error {
 	state, err := t.loadState()
 	if err != nil {
 		return err
